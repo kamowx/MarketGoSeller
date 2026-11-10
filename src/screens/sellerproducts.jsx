@@ -188,6 +188,8 @@ function Sellerproducts() {
 
                   <h3>{product.name}</h3>
 
+                  <small>{product.weight} кг</small>
+
                   <div className="seller-product-bottom">
                     <strong>
                       {Number(product.price).toLocaleString("ru-RU")} сом

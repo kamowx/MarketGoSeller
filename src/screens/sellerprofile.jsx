@@ -184,6 +184,10 @@ function Sellerprofile() {
               <span>Адрес магазина</span>
               <h3>{business?.adrescompany || "Не указан"}</h3>
             </div>
+            <div className="seller-profile-info-item seller-profile-full">
+              <span>Баланс</span>
+              <h3>{user?.balance || "Не указан"}</h3>
+            </div>
           </div>
         </div>
 

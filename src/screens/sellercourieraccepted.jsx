@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SellerBottomnav from "../components/SellerBottomnav";
 
@@ -13,13 +13,9 @@ function Sellercourieraccepted() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    getOrders();
-  }, []);
-
   const getOrders = async () => {
     try {
-      const uid = localStorage.getItem("uid");
+      const uid = localStorage.getItem("uid")?.replaceAll('"', "");
 
       if (!uid) {
         navigate("/sellersignin");
@@ -29,7 +25,9 @@ function Sellercourieraccepted() {
       const usersResponse = await axios.get(USERS_URL);
 
       const currentSeller = usersResponse.data.find(
-        (item) => item.uid === uid && item.role === "seller",
+        (item) =>
+          String(item.uid).replaceAll('"', "") === String(uid) &&
+          item.role === "seller",
       );
 
       if (!currentSeller) {
@@ -43,15 +41,63 @@ function Sellercourieraccepted() {
         (item) => String(item.userId) === String(currentSeller.id),
       );
 
-      const sellerProductIds = sellerProducts.map((item) => String(item.id));
-
       const ordersResponse = await axios.get(ORDERS_URL);
 
-      const sellerOrders = ordersResponse.data.filter(
-        (item) =>
-          sellerProductIds.includes(String(item.productId)) &&
-          item.orderstatus === "Получить",
-      );
+      const sellerOrders = [];
+
+      ordersResponse.data.forEach((order) => {
+        // Новая структура storeOrders
+        if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
+          const storeOrder = order.storeOrders.find(
+            (item) => String(item.sellerId) === String(currentSeller.id),
+          );
+
+          if (storeOrder && storeOrder.orderstatus === "Получить") {
+            sellerOrders.push({
+              ...order,
+              storeOrder,
+              sellerProducts: storeOrder.products || [],
+              sellerTotal: Number(storeOrder.totalPrice || 0),
+              sellerWeight: Number(storeOrder.allweight || 0),
+            });
+          }
+
+          return;
+        }
+
+        // Поддержка старых заказов
+        const orderProductIds = Array.isArray(order.productId)
+          ? order.productId.map(String)
+          : [String(order.productId)];
+
+        const myProducts = sellerProducts.filter((product) =>
+          orderProductIds.includes(String(product.id)),
+        );
+
+        if (myProducts.length > 0 && order.orderstatus === "Получить") {
+          const products = (order.products || []).filter((item) =>
+            myProducts.some(
+              (product) => String(product.id) === String(item.id),
+            ),
+          );
+
+          sellerOrders.push({
+            ...order,
+            sellerProducts:
+              products.length > 0
+                ? products
+                : myProducts.map((product) => ({
+                    id: product.id,
+                    avatar: product.avatar,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                  })),
+            sellerTotal: Number(order.totalPrice || order.price || 0),
+            sellerWeight: Number(order.allweight || 0),
+          });
+        }
+      });
 
       sellerOrders.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
@@ -60,20 +106,42 @@ function Sellercourieraccepted() {
       setOrders(sellerOrders);
     } catch (error) {
       console.log("Ошибка загрузки заказов:", error);
+      alert("Не удалось загрузить заказы");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    getOrders();
+  }, []);
+
   // Передать заказ курьеру
   const giveOrderToCourier = async (order) => {
     try {
-      await axios.put(`${ORDERS_URL}/${order.id}`, {
-        ...order,
-        orderstatus: "Передано",
-      });
+      if (order.storeOrder) {
+        const updatedStoreOrders = order.storeOrders.map((item) =>
+          String(item.sellerId) === String(order.storeOrder.sellerId)
+            ? { ...item, orderstatus: "Передано" }
+            : item,
+        );
 
-      setOrders((prev) => prev.filter((item) => item.id !== order.id));
+        await axios.put(`${ORDERS_URL}/${order.id}`, {
+          ...order,
+          storeOrders: updatedStoreOrders,
+          orderstatus: "Передано",
+        });
+      } else {
+        // Старый формат заказа
+        await axios.put(`${ORDERS_URL}/${order.id}`, {
+          ...order,
+          orderstatus: "Передано",
+        });
+      }
+
+      setOrders((prev) =>
+        prev.filter((item) => String(item.id) !== String(order.id)),
+      );
 
       alert("Заказ передан курьеру!");
     } catch (error) {
@@ -81,6 +149,8 @@ function Sellercourieraccepted() {
       alert("Не удалось передать заказ");
     }
   };
+
+  const formatPrice = (price) => Number(price || 0).toLocaleString("ru-RU");
 
   return (
     <div className="seller-confirmed-page">
@@ -122,25 +192,40 @@ function Sellercourieraccepted() {
                 </div>
 
                 <span className="seller-confirmed-price">
-                  {Number(order.price).toLocaleString("ru-RU")} сом
+                  {formatPrice(order.sellerTotal)} сом
                 </span>
               </div>
 
-              <div className="seller-confirmed-product">
-                <img src={order.avatar} alt={order.name} />
+              {(order.sellerProducts || []).map((product, index) => (
+                <div
+                  className="seller-confirmed-product"
+                  key={product.id || index}
+                >
+                  <img
+                    src={product.avatar || ""}
+                    alt={product.name || "Товар"}
+                  />
 
-                <div>
-                  <h3>{order.name}</h3>
-                  <p>Размер: {order.size || "Не указан"}</p>
-                  <p>Цвет: {order.color || "Не указан"}</p>
-                  <p>Количество: {order.quantity || 1} шт.</p>
+                  <div>
+                    <h3>{product.name || "Товар"}</h3>
+                    <p>Размер: {product.size || "Не указан"}</p>
+                    <p>Цвет: {product.color || "Не указан"}</p>
+                    <p>Количество: {product.quantity || 1} шт.</p>
+                    <strong>
+                      {formatPrice(
+                        Number(product.price || 0) *
+                          Number(product.quantity || 1),
+                      )}{" "}
+                      сом
+                    </strong>
+                  </div>
                 </div>
-              </div>
+              ))}
 
               <div className="seller-confirmed-info">
                 <p>
                   <i className="fa-solid fa-user"></i>
-                  {order.firstname} {order.lastname}
+                  {order.firstname || ""} {order.lastname || ""}
                 </p>
 
                 <p>
@@ -151,6 +236,11 @@ function Sellercourieraccepted() {
                 <p>
                   <i className="fa-solid fa-location-dot"></i>
                   {order.adres || "Адрес не указан"}
+                </p>
+
+                <p>
+                  <i className="fa-solid fa-weight-hanging"></i>
+                  Вес: {order.sellerWeight || 0} кг
                 </p>
               </div>
 

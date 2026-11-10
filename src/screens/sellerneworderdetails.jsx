@@ -12,11 +12,14 @@ function Sellerneworderdetails() {
   const { id } = useParams();
 
   const [order, setOrder] = useState(null);
-  const [product, setProduct] = useState(null);
+  const [products, setProducts] = useState([]);
   const [buyer, setBuyer] = useState(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
+
+  const [currentSeller, setCurrentSeller] = useState(null);
+  const [storeOrder, setStoreOrder] = useState(null);
 
   const getOrder = async () => {
     try {
@@ -29,28 +32,110 @@ function Sellerneworderdetails() {
 
       const usersResponse = await axios.get(USERS_URL);
 
-      const currentSeller = usersResponse.data.find(
+      const seller = usersResponse.data.find(
         (item) => String(item.uid).replaceAll('"', "") === String(uid),
       );
 
-      if (!currentSeller || currentSeller.role !== "seller") {
+      if (!seller || seller.role !== "seller") {
         navigate("/sellersignin");
         return;
       }
+
+      setCurrentSeller(seller);
 
       const orderResponse = await axios.get(`${ORDERS_URL}/${id}`);
       const currentOrder = orderResponse.data;
 
       const productResponse = await axios.get(PRODUCTS_URL);
 
-      const currentProduct = productResponse.data.find(
-        (item) =>
-          String(item.id) === String(currentOrder.productId) &&
-          String(item.userId) === String(currentSeller.id),
+      const sellerProducts = productResponse.data.filter(
+        (item) => String(item.userId) === String(seller.id),
       );
 
-      if (!currentProduct) {
-        alert("Этот заказ не найден или не принадлежит вашему магазину");
+      let myProducts = [];
+      let myStoreOrder = null;
+      let currentStatus = "";
+
+      // Новая структура заказа
+      if (
+        Array.isArray(currentOrder.storeOrders) &&
+        currentOrder.storeOrders.length > 0
+      ) {
+        myStoreOrder = currentOrder.storeOrders.find(
+          (item) => String(item.sellerId) === String(seller.id),
+        );
+
+        if (!myStoreOrder) {
+          alert("Этот заказ не принадлежит вашему магазину");
+          navigate("/sellerneworders");
+          return;
+        }
+
+        const orderProducts = myStoreOrder.products || [];
+
+        myProducts = orderProducts.map((orderProduct) => {
+          const originalProduct = sellerProducts.find(
+            (item) => String(item.id) === String(orderProduct.id),
+          );
+
+          return {
+            ...orderProduct,
+            category: originalProduct?.category || "—",
+          };
+        });
+
+        currentStatus =
+          myStoreOrder.orderstatus || currentOrder.orderstatus || "Ожидание";
+      } else {
+        // Поддержка старой структуры заказа
+        const orderProductIds = Array.isArray(currentOrder.productId)
+          ? currentOrder.productId
+          : [currentOrder.productId];
+
+        myProducts = sellerProducts
+          .filter((item) =>
+            orderProductIds.some(
+              (productId) => String(productId) === String(item.id),
+            ),
+          )
+          .map((item) => {
+            const orderProduct = (currentOrder.products || []).find(
+              (product) => String(product.id) === String(item.id),
+            );
+
+            return {
+              ...item,
+              ...orderProduct,
+              category: item.category || "—",
+            };
+          });
+
+        // Если в старом заказе нет массива products
+        if (myProducts.length === 0) {
+          const oldProduct = sellerProducts.find(
+            (item) => String(item.id) === String(currentOrder.productId),
+          );
+
+          if (oldProduct) {
+            myProducts = [
+              {
+                ...oldProduct,
+                avatar: currentOrder.avatar || oldProduct.avatar,
+                name: currentOrder.name || oldProduct.name,
+                price: currentOrder.price,
+                quantity: currentOrder.quantity || 1,
+                size: currentOrder.size,
+                color: currentOrder.color,
+              },
+            ];
+          }
+        }
+
+        currentStatus = currentOrder.orderstatus || "Ожидание";
+      }
+
+      if (myProducts.length === 0) {
+        alert("Товары этого магазина не найдены");
         navigate("/sellerneworders");
         return;
       }
@@ -60,9 +145,10 @@ function Sellerneworderdetails() {
       );
 
       setOrder(currentOrder);
-      setProduct(currentProduct);
+      setStoreOrder(myStoreOrder);
+      setProducts(myProducts);
       setBuyer(currentBuyer || null);
-      setStatus(currentOrder.orderstatus);
+      setStatus(currentStatus);
     } catch (error) {
       console.log("Ошибка получения заказа:", error);
       alert("Не удалось загрузить заказ");
@@ -84,10 +170,44 @@ function Sellerneworderdetails() {
     return new Date(date).toLocaleDateString("ru-RU");
   };
 
-  const confirmOrder = async () => {
-    if (confirming || !order) return;
+  // Количество всех товаров
+  const totalQuantity = products.reduce(
+    (sum, item) => sum + Number(item.quantity || 1),
+    0,
+  );
 
-    if (order.orderstatus !== "Ожидание") {
+  // Общая стоимость товаров
+  const total = storeOrder
+    ? Number(
+        storeOrder.totalPrice ??
+          products.reduce(
+            (sum, item) =>
+              sum + Number(item.price || 0) * Number(item.quantity || 1),
+            0,
+          ),
+      )
+    : Number(
+        order?.totalPrice ??
+          products.reduce(
+            (sum, item) =>
+              sum + Number(item.price || 0) * Number(item.quantity || 1),
+            0,
+          ),
+      );
+
+  // Общий вес заказа
+  const totalWeight = storeOrder
+    ? Number(storeOrder.allweight || 0)
+    : products.reduce(
+        (sum, item) =>
+          sum + Number(item.weight || 0) * Number(item.quantity || 1),
+        0,
+      );
+
+  const confirmOrder = async () => {
+    if (confirming || !order || !currentSeller) return;
+
+    if (status !== "Ожидание") {
       alert("Этот заказ уже обработан");
       return;
     }
@@ -95,13 +215,75 @@ function Sellerneworderdetails() {
     try {
       setConfirming(true);
 
-      const response = await axios.put(`${ORDERS_URL}/${id}`, {
-        ...order,
-        orderstatus: "Подтверждено",
-      });
+      // Получаем актуальный заказ перед обновлением
+      const latestResponse = await axios.get(`${ORDERS_URL}/${id}`);
+      const latestOrder = latestResponse.data;
+
+      let updatedOrder;
+
+      // Новая структура storeOrders
+      if (
+        Array.isArray(latestOrder.storeOrders) &&
+        latestOrder.storeOrders.length > 0
+      ) {
+        const myStoreIndex = latestOrder.storeOrders.findIndex(
+          (item) => String(item.sellerId) === String(currentSeller.id),
+        );
+
+        if (myStoreIndex === -1) {
+          alert("Заказ не принадлежит вашему магазину");
+          return;
+        }
+
+        if (latestOrder.storeOrders[myStoreIndex].orderstatus !== "Ожидание") {
+          alert("Этот заказ уже обработан");
+          setStatus(latestOrder.storeOrders[myStoreIndex].orderstatus);
+          return;
+        }
+
+        const updatedStoreOrders = [...latestOrder.storeOrders];
+
+        updatedStoreOrders[myStoreIndex] = {
+          ...updatedStoreOrders[myStoreIndex],
+          orderstatus: "Подтверждено",
+        };
+
+        updatedOrder = {
+          ...latestOrder,
+          storeOrders: updatedStoreOrders,
+          // Поддерживаем старое поле для совместимости
+          orderstatus: "Подтверждено",
+        };
+      } else {
+        // Старая структура заказа
+        if (latestOrder.orderstatus !== "Ожидание") {
+          alert("Этот заказ уже обработан");
+          return;
+        }
+
+        updatedOrder = {
+          ...latestOrder,
+          orderstatus: "Подтверждено",
+        };
+      }
+
+      const response = await axios.put(`${ORDERS_URL}/${id}`, updatedOrder);
 
       setOrder(response.data);
-      setStatus(response.data.orderstatus);
+
+      if (
+        Array.isArray(response.data.storeOrders) &&
+        response.data.storeOrders.length > 0
+      ) {
+        const updatedMyStore = response.data.storeOrders.find(
+          (item) => String(item.sellerId) === String(currentSeller.id),
+        );
+
+        setStoreOrder(updatedMyStore || null);
+        setStatus(updatedMyStore?.orderstatus || "Подтверждено");
+      } else {
+        setStatus(response.data.orderstatus);
+      }
 
       alert("Заказ подтверждён!");
 
@@ -123,7 +305,7 @@ function Sellerneworderdetails() {
     );
   }
 
-  if (!order || !product) {
+  if (!order || products.length === 0) {
     return (
       <div className="seller-order-details-page">
         <h2>Заказ не найден</h2>
@@ -132,10 +314,6 @@ function Sellerneworderdetails() {
       </div>
     );
   }
-
-  const quantity = Number(order.quantity || 1);
-  const total = Number(order.price || 0);
-  const unitPrice = total / quantity;
 
   return (
     <div className="seller-order-details-page">
@@ -156,18 +334,33 @@ function Sellerneworderdetails() {
               <span className="seller-details-new">{status}</span>
             </div>
 
-            <div className="seller-details-product">
-              <img src={order.avatar || product.avatar} alt={order.name} />
+            {products.map((product, index) => {
+              const quantity = Number(product.quantity || 1);
+              const unitPrice = Number(product.price || 0);
+              const productTotal = unitPrice * quantity;
 
-              <div>
-                <h3>{order.name}</h3>
-                <p>Категория: {product.category || "—"}</p>
-                <p>Размер: {order.size || "—"}</p>
-                <p>Цвет: {order.color || "—"}</p>
-                <p>Количество: {quantity} шт.</p>
-                <strong>{formatPrice(total)} сом</strong>
-              </div>
-            </div>
+              return (
+                <div key={product.id || index}>
+                  <div className="seller-details-product">
+                    <img src={product.avatar} alt={product.name || "Товар"} />
+
+                    <div>
+                      <h3>{product.name || "Без названия"}</h3>
+                      <p>Категория: {product.category || "—"}</p>
+                      <p>Размер: {product.size || "—"}</p>
+                      <p>Цвет: {product.color || "—"}</p>
+                      <p>Количество: {quantity} шт.</p>
+                      <p>Вес: {Number(product.weight || 0) * quantity} кг</p>
+                      <strong>{formatPrice(productTotal)} сом</strong>
+                    </div>
+                  </div>
+
+                  {index !== products.length - 1 && (
+                    <div className="seller-details-divider"></div>
+                  )}
+                </div>
+              );
+            })}
 
             <div className="seller-details-divider"></div>
 
@@ -213,13 +406,13 @@ function Sellerneworderdetails() {
             <h3 className="seller-details-subtitle">Оплата заказа</h3>
 
             <div className="seller-details-total">
-              <span>Стоимость товара</span>
-              <strong>{formatPrice(unitPrice)} сом</strong>
+              <span>Количество товаров</span>
+              <strong>{totalQuantity} шт.</strong>
             </div>
 
             <div className="seller-details-total">
-              <span>Количество</span>
-              <strong>{quantity} шт.</strong>
+              <span>Общий вес</span>
+              <strong>{totalWeight} кг</strong>
             </div>
 
             <div className="seller-details-divider"></div>

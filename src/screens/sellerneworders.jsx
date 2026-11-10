@@ -22,6 +22,7 @@ function Sellerneworders() {
         return;
       }
 
+      // Получаем продавца
       const usersResponse = await axios.get(USERS_URL);
 
       const currentUser = usersResponse.data.find(
@@ -33,22 +34,110 @@ function Sellerneworders() {
         return;
       }
 
+      // Получаем товары продавца
       const productsResponse = await axios.get(PRODUCTS_URL);
 
       const sellerProducts = productsResponse.data.filter(
         (item) => String(item.userId) === String(currentUser.id),
       );
 
+      // Получаем заказы
       const ordersResponse = await axios.get(ORDERS_URL);
 
-      const sellerOrders = ordersResponse.data.filter((order) => {
-        const sellerProduct = sellerProducts.find(
-          (product) => String(product.id) === String(order.productId),
+      const sellerOrders = [];
+
+      ordersResponse.data.forEach((order) => {
+        // НОВАЯ СИСТЕМА: storeOrders
+        if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
+          // Находим заказ именно этого продавца
+          const myStoreOrder = order.storeOrders.find(
+            (store) => String(store.sellerId) === String(currentUser.id),
+          );
+
+          if (!myStoreOrder) return;
+
+          // Проверяем статус именно магазина
+          const storeStatus =
+            myStoreOrder.orderstatus || order.orderstatus || "Ожидание";
+
+          if (storeStatus !== "Ожидание") return;
+
+          const myProducts = Array.isArray(myStoreOrder.products)
+            ? myStoreOrder.products
+            : [];
+
+          if (myProducts.length === 0) return;
+
+          const myTotal = myProducts.reduce(
+            (sum, product) =>
+              sum + Number(product.price || 0) * Number(product.quantity || 1),
+            0,
+          );
+
+          sellerOrders.push({
+            ...order,
+
+            // Товары только этого магазина
+            products: myProducts,
+
+            // Данные конкретного магазина
+            storeOrder: myStoreOrder,
+            storeStatus,
+
+            sellerTotal: Number(myStoreOrder.totalPrice ?? myTotal),
+
+            sellerWeight: Number(myStoreOrder.allweight || 0),
+          });
+
+          return;
+        }
+
+        // СТАРАЯ СИСТЕМА: поддержка старых заказов
+        const orderProducts = Array.isArray(order.products)
+          ? order.products
+          : order.name
+            ? [
+                {
+                  id: order.productId,
+                  name: order.name,
+                  avatar: order.avatar,
+                  price: order.price,
+                  quantity: order.quantity || 1,
+                  color: order.color,
+                  size: order.size,
+                  weight: order.weight,
+                },
+              ]
+            : [];
+
+        const myProducts = orderProducts.filter((orderProduct) =>
+          sellerProducts.some(
+            (product) => String(product.id) === String(orderProduct.id),
+          ),
         );
 
-        return sellerProduct && order.orderstatus === "Ожидание";
+        if (myProducts.length === 0) return;
+
+        const oldStatus = order.orderstatus || "Ожидание";
+
+        if (oldStatus !== "Ожидание") return;
+
+        const myTotal = myProducts.reduce(
+          (sum, product) =>
+            sum + Number(product.price || 0) * Number(product.quantity || 1),
+          0,
+        );
+
+        sellerOrders.push({
+          ...order,
+          products: myProducts,
+          storeStatus: oldStatus,
+          sellerTotal: myTotal,
+          storeOrder: null,
+        });
       });
 
+      // Сначала показываем последние заказы
       sellerOrders.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       );
@@ -132,36 +221,60 @@ function Sellerneworders() {
                   <span className="seller-order-status">Новый</span>
                 </div>
 
-                <div className="seller-order-product">
-                  <img src={order.avatar} alt={order.name} />
+                {/* Товары этого магазина */}
+                {order.products.map((product, index) => (
+                  <div
+                    className="seller-order-product"
+                    key={`${product.id}-${index}`}
+                  >
+                    <img src={product.avatar} alt={product.name} />
 
-                  <div>
-                    <h4>{order.name}</h4>
-                    <p>
-                      Размер: {order.size || "—"} · Цвет: {order.color || "—"}
-                    </p>
-                    <strong>{formatPrice(order.price)} сом</strong>
+                    <div>
+                      <h4>{product.name}</h4>
+
+                      <p>
+                        Размер: {product.size || "—"} · Цвет:{" "}
+                        {product.color || "—"}
+                      </p>
+
+                      <p>Количество: {product.quantity || 1} шт.</p>
+
+                      <strong>
+                        {formatPrice(
+                          Number(product.price || 0) *
+                            Number(product.quantity || 1),
+                        )}{" "}
+                        сом
+                      </strong>
+                    </div>
                   </div>
-                </div>
+                ))}
 
                 <div className="seller-order-info">
                   <p>
-                    <span>Покупатель</span> {order.firstname} {order.lastname}
-                  </p>
-                  <p>
-                    <span>Телeфонный номер</span> {order.numberphone || "-"}
+                    <span>Телефон покупателя</span> {order.numberphone || "—"}
                   </p>
 
                   <p>
-                    <span>Адрес</span> {order.adres}
-                  </p>
-
-                  <p>
-                    <span>Количество</span> {order.quantity || 1} шт.
+                    <span>Адрес доставки</span> {order.adres || "—"}
                   </p>
 
                   <p>
                     <span>Дата заказа</span> {formatDate(order.createdAt)}
+                  </p>
+
+                  <p>
+                    <span>Количество товаров</span>{" "}
+                    {order.products.reduce(
+                      (sum, product) => sum + Number(product.quantity || 1),
+                      0,
+                    )}{" "}
+                    шт.
+                  </p>
+
+                  <p>
+                    <span>Сумма ваших товаров</span>{" "}
+                    <strong>{formatPrice(order.sellerTotal)} сом</strong>
                   </p>
                 </div>
 

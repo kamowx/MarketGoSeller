@@ -45,7 +45,7 @@ function App() {
           element={<Sellercourierdetails />}
         />
         <Route
-          path="/sellerconfirmeddetails"
+          path="/sellerconfirmeddetails/:id"
           element={<Sellerconfirmeddetails />}
         />
         <Route

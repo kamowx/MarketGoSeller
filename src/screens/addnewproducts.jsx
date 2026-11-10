@@ -14,6 +14,7 @@ function AddNewProducts() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
+  const [weight, setWeight] = useState("");
   const [image, setImage] = useState("");
   const [sizes, setSizes] = useState([]);
   const [colors, setColors] = useState([]);
@@ -51,6 +52,7 @@ function AddNewProducts() {
       !description.trim() ||
       !category ||
       !price ||
+      !weight ||
       !image.trim()
     ) {
       alert("Заполните все основные поля товара");
@@ -59,6 +61,11 @@ function AddNewProducts() {
 
     if (Number(price) <= 0) {
       alert("Введите правильную цену");
+      return;
+    }
+
+    if (Number(weight) <= 0) {
+      alert("Введите правильный вес товара");
       return;
     }
 
@@ -75,7 +82,7 @@ function AddNewProducts() {
     try {
       setSaving(true);
 
-      //  пользователей
+      // Получаем пользователей
       const usersResponse = await axios.get(USERS_URL);
 
       const currentUser = usersResponse.data.find(
@@ -88,10 +95,10 @@ function AddNewProducts() {
         return;
       }
 
-      //  магазины
+      // Получаем магазины
       const businessResponse = await axios.get(BUSINESS_URL);
 
-      //  userId
+      // Находим магазин продавца
       const currentBusiness = businessResponse.data.find(
         (item) => String(item.userId) === String(currentUser.id),
       );
@@ -101,7 +108,7 @@ function AddNewProducts() {
         return;
       }
 
-      //  новый товар
+      // Новый товар
       const newProduct = {
         userId: currentUser.id,
         createdAt: new Date().toISOString(),
@@ -111,6 +118,7 @@ function AddNewProducts() {
         description: description.trim(),
         category: category,
         price: Number(price),
+        weight: Number(weight),
 
         adrescompany: currentBusiness.adrescompany,
         namecompany: currentBusiness.name,
@@ -333,13 +341,13 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Цена */}
+          {/* Цена и вес */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>05</span>
               <div>
-                <h2>Стоимость товара</h2>
-                <p>Укажите цену в сомах</p>
+                <h2>Стоимость и вес товара</h2>
+                <p>Укажите цену и вес одной штуки товара</p>
               </div>
             </div>
 
@@ -354,6 +362,21 @@ function AddNewProducts() {
                   onChange={(e) => setPrice(e.target.value)}
                 />
                 <span>сом</span>
+              </div>
+            </div>
+
+            <div className="seller-add-field">
+              <label>Вес одного товара (кг)</label>
+              <div className="seller-add-price">
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  placeholder="Например, 0.5"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                />
+                <span>кг</span>
               </div>
             </div>
           </div>

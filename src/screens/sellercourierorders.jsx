@@ -25,10 +25,12 @@ function Sellercourierorders() {
       const usersResponse = await axios.get(USERS_URL);
 
       const currentSeller = usersResponse.data.find(
-        (item) => String(item.uid).replaceAll('"', "") === String(uid),
+        (item) =>
+          String(item.uid).replaceAll('"', "") === String(uid) &&
+          item.role === "seller",
       );
 
-      if (!currentSeller || currentSeller.role !== "seller") {
+      if (!currentSeller) {
         navigate("/sellersignin");
         return;
       }
@@ -41,12 +43,60 @@ function Sellercourierorders() {
 
       const ordersResponse = await axios.get(ORDERS_URL);
 
-      const sellerOrders = ordersResponse.data.filter((order) => {
-        const sellerProduct = sellerProducts.find(
-          (product) => String(product.id) === String(order.productId),
+      const sellerOrders = [];
+
+      ordersResponse.data.forEach((order) => {
+        // Новая структура storeOrders
+        if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
+          const storeOrder = order.storeOrders.find(
+            (item) => String(item.sellerId) === String(currentSeller.id),
+          );
+
+          if (storeOrder && storeOrder.orderstatus === "Ожидание курьера") {
+            sellerOrders.push({
+              ...order,
+              storeOrder,
+              sellerProducts: storeOrder.products || [],
+              sellerTotal: Number(storeOrder.totalPrice || 0),
+              sellerWeight: Number(storeOrder.allweight || 0),
+            });
+          }
+
+          return;
+        }
+
+        // Поддержка старых заказов
+        const orderProductIds = Array.isArray(order.productId)
+          ? order.productId.map(String)
+          : [String(order.productId)];
+
+        const myProducts = sellerProducts.filter((product) =>
+          orderProductIds.includes(String(product.id)),
         );
 
-        return sellerProduct && order.orderstatus === "Ожидание курьера";
+        if (myProducts.length > 0 && order.orderstatus === "Ожидание курьера") {
+          const products = (order.products || []).filter((item) =>
+            myProducts.some(
+              (product) => String(product.id) === String(item.id),
+            ),
+          );
+
+          sellerOrders.push({
+            ...order,
+            sellerProducts:
+              products.length > 0
+                ? products
+                : myProducts.map((product) => ({
+                    id: product.id,
+                    avatar: product.avatar,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1,
+                  })),
+            sellerTotal: Number(order.totalPrice || order.price || 0),
+            sellerWeight: Number(order.allweight || 0),
+          });
+        }
       });
 
       sellerOrders.sort(
@@ -70,7 +120,6 @@ function Sellercourierorders() {
 
   const formatDate = (date) => {
     if (!date) return "—";
-
     return new Date(date).toLocaleDateString("ru-RU");
   };
 
@@ -102,25 +151,47 @@ function Sellercourierorders() {
                 <span>Ожидание курьера</span>
               </div>
 
-              <div className="seller-confirmed-product">
-                <img src={order.avatar} alt={order.name} />
+              {(order.sellerProducts || []).map((product, index) => (
+                <div
+                  className="seller-confirmed-product"
+                  key={product.id || index}
+                >
+                  <img
+                    src={product.avatar || ""}
+                    alt={product.name || "Товар"}
+                  />
 
-                <div>
-                  <h4>{order.name}</h4>
-                  <p>
-                    Размер: {order.size || "—"} · Цвет: {order.color || "—"}
-                  </p>
-                  <strong>{formatPrice(order.price)} сом</strong>
+                  <div>
+                    <h4>{product.name || "Товар"}</h4>
+                    <p>
+                      Размер: {product.size || "—"} · Цвет:{" "}
+                      {product.color || "—"}
+                    </p>
+                    <p>Количество: {product.quantity || 1} шт.</p>
+                    <strong>
+                      {formatPrice(
+                        Number(product.price || 0) *
+                          Number(product.quantity || 1),
+                      )}{" "}
+                      сом
+                    </strong>
+                  </div>
                 </div>
-              </div>
+              ))}
 
               <div className="seller-confirmed-info">
                 <p>
-                  <span>Покупатель</span> {order.firstname} {order.lastname}
+                  <span>Покупатель</span> {order.firstname || ""}{" "}
+                  {order.lastname || ""}
                 </p>
 
                 <p>
-                  <span>Количество</span> {order.quantity || 1} шт.
+                  <span>Количество товаров</span>{" "}
+                  {(order.sellerProducts || []).reduce(
+                    (sum, item) => sum + Number(item.quantity || 1),
+                    0,
+                  )}{" "}
+                  шт.
                 </p>
 
                 <p>
@@ -134,10 +205,18 @@ function Sellercourierorders() {
                 <p>
                   <span>Дата заказа</span> {formatDate(order.createdAt)}
                 </p>
+
+                <p>
+                  <span>Итого</span>{" "}
+                  <strong>{formatPrice(order.sellerTotal)} сом</strong>
+                </p>
               </div>
 
-              <Link className="seller-confirmed-button">
-                Ожидайте
+              <Link
+                to={`/sellercourierdetails/${order.id}`}
+                className="seller-confirmed-button"
+              >
+                Подробнее
                 <i className="fa-solid fa-arrow-right"></i>
               </Link>
             </div>
