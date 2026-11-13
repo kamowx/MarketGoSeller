@@ -55,7 +55,6 @@ function Sellerconfirmeddetails() {
       let myStoreOrder = null;
       let currentStatus = "";
 
-      // Новая структура storeOrders
       if (
         Array.isArray(currentOrder.storeOrders) &&
         currentOrder.storeOrders.length > 0
@@ -84,7 +83,6 @@ function Sellerconfirmeddetails() {
         currentStatus =
           myStoreOrder.orderstatus || currentOrder.orderstatus || "";
       } else {
-        // Поддержка старой структуры
         const orderProductIds = Array.isArray(currentOrder.productId)
           ? currentOrder.productId
           : [currentOrder.productId];
@@ -210,7 +208,6 @@ function Sellerconfirmeddetails() {
 
       let updatedOrder;
 
-      // Новая структура storeOrders
       if (
         Array.isArray(latestOrder.storeOrders) &&
         latestOrder.storeOrders.length > 0
@@ -244,7 +241,6 @@ function Sellerconfirmeddetails() {
           orderstatus: "Ожидание курьера",
         };
       } else {
-        // Старая структура заказа
         if (latestOrder.orderstatus !== "Подтверждено") {
           alert("Этот заказ уже обработан");
           return;

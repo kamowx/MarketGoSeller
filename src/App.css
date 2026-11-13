@@ -153,7 +153,6 @@
   letter-spacing: 3px;
 }
 
-/* Планшет */
 @media (max-width: 900px) {
   .admin-signup-left {
     padding: 35px;
@@ -168,7 +167,6 @@
   }
 }
 
-/* Телефон */
 @media (max-width: 650px) {
   .admin-signup-page {
     flex-direction: column;
@@ -203,7 +201,6 @@
   }
 }
 
-/* Большой экран */
 @media (min-width: 1200px) {
   .admin-signup-container {
     max-width: 500px;
@@ -245,7 +242,6 @@
   min-height: 100vh;
 }
 
-/* Левая часть */
 
 .checkout-left {
   width: 50%;
@@ -284,7 +280,6 @@
   letter-spacing: 3px;
 }
 
-/* Правая часть */
 
 .checkout-right {
   width: 50%;
@@ -322,7 +317,6 @@
   margin-bottom: 35px;
 }
 
-/* Поля */
 
 .checkout-name-row {
   display: flex;
@@ -406,7 +400,6 @@
   outline: 1px solid #000000;
 }
 
-/* Кнопка */
 
 .checkout-button {
   width: 100%;
@@ -433,7 +426,6 @@
   font-size: 21px;
 }
 
-/* Подвал */
 
 .checkout-footer {
   color: #aaaaaa;
@@ -442,7 +434,6 @@
   margin-top: 50px;
 }
 
-/* Планшет */
 
 @media (max-width: 900px) {
   .checkout-left {
@@ -458,7 +449,6 @@
   }
 }
 
-/* Телефон */
 
 @media (max-width: 650px) {
   .checkout-container {
@@ -541,7 +531,6 @@
   gap: 55px;
 }
 
-/* Боковое меню */
 
 .profile-sidebar h2 {
   font-family: "Integral CF", "Arial Black", sans-serif;
@@ -623,7 +612,6 @@
   margin-top: 15px;
 }
 
-/* Основная часть */
 
 .profile-content {
   min-width: 0;
@@ -661,7 +649,6 @@
   font-size: 22px;
 }
 
-/* Информация */
 
 .profile-information {
   border: 1px solid #eeeeee;
@@ -695,7 +682,6 @@
   margin: 0;
 }
 
-/* Данные пользователя */
 
 .profile-details {
   display: grid;
@@ -723,7 +709,6 @@
   border-top: 1px solid #eeeeee;
 }
 
-/* Кнопка */
 
 .profile-edit-button {
   width: 100%;
@@ -757,7 +742,6 @@
   letter-spacing: 2px;
 }
 
-/* Планшет */
 
 @media (max-width: 900px) {
   .profile-container {
@@ -775,7 +759,6 @@
   }
 }
 
-/* Телефон */
 
 @media (max-width: 650px) {
   .profile-header {
@@ -858,7 +841,6 @@
   padding-bottom: 30px;
 }
 
-/* Шапка */
 
 .stylestore-profile-header {
   width: 100%;
@@ -893,7 +875,6 @@
   text-decoration: none;
 }
 
-/* Контент */
 
 .stylestore-profile-content {
   width: 100%;
@@ -902,7 +883,6 @@
   padding: 35px 20px;
 }
 
-/* Пользователь */
 
 .stylestore-profile-user {
   text-align: center;
@@ -933,7 +913,6 @@
   color: #888888;
 }
 
-/* Карточка данных */
 
 .stylestore-profile-card {
   border: 1px solid #eeeeee;
@@ -977,7 +956,6 @@
   font-weight: 700;
 }
 
-/* Разделы */
 
 .stylestore-profile-actions {
   border: 1px solid #eeeeee;
@@ -1037,7 +1015,6 @@
   color: #555555;
 }
 
-/* Кнопки */
 
 .stylestore-profile-buttons {
   display: flex;
@@ -1081,7 +1058,6 @@
   background: #fff5f5;
 }
 
-/* Подвал */
 
 .stylestore-profile-footer {
   text-align: center;
@@ -1091,7 +1067,6 @@
   margin-top: 35px;
 }
 
-/* ПК */
 
 @media (min-width: 1000px) {
   .stylestore-profile-content {
@@ -1099,7 +1074,6 @@
   }
 }
 
-/* Телефон */
 
 @media (max-width: 576px) {
   .stylestore-profile-header {
@@ -1183,7 +1157,6 @@
   margin: 0;
 }
 
-/* Фото профиля */
 
 .edit-profile-avatar {
   display: flex;
@@ -1232,7 +1205,6 @@
   gap: 8px;
 }
 
-/* Форма */
 
 .edit-profile-form h3 {
   font-size: 21px;
@@ -1278,7 +1250,6 @@
   color: #999;
 }
 
-/* Кнопки */
 
 .edit-profile-actions {
   display: flex;
@@ -1306,7 +1277,6 @@
   font-weight: 600;
 }
 
-/* Телефон */
 
 @media (max-width: 600px) {
   .edit-profile-page {
@@ -1447,7 +1417,6 @@
   padding: 30px 35px;
 }
 
-/* HEADER */
 .market-header {
   height: 80px;
   padding: 0 5%;
@@ -1483,7 +1452,6 @@
   font-size: 17px;
 }
 
-/* WELCOME */
 .market-welcome {
   padding: 35px 0 25px;
 }
@@ -1521,7 +1489,6 @@
   font-size: 24px;
 }
 
-/* SEARCH */
 .market-search {
   height: 55px;
   background: #fff;
@@ -1547,7 +1514,6 @@
   color: #111;
 }
 
-/* CATEGORIES */
 .market-categories {
   display: flex;
   gap: 10px;
@@ -1572,7 +1538,6 @@
   color: #fff;
 }
 
-/* SECTION TITLE */
 .market-section-title {
   display: flex;
   justify-content: space-between;
@@ -1591,7 +1556,6 @@
   font-size: 13px;
 }
 
-/* PRODUCT CARDS */
 .market-products {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1661,7 +1625,6 @@
   font-weight: 800;
 }
 
-/* ORDERS */
 .orders-container {
   padding-top: 35px;
 }
@@ -1741,7 +1704,6 @@
   color: #fff;
 }
 
-/* MOBILE */
 @media (max-width: 900px) {
   .market-products {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1860,7 +1822,6 @@
   margin: auto;
 }
 
-/* HEADER */
 
 .order-status-header {
   display: flex;
@@ -1891,7 +1852,6 @@
   margin: 5px 0 0;
 }
 
-/* PRODUCT */
 
 .order-status-product {
   background: white;
@@ -1955,7 +1915,6 @@
   margin-top: 22px;
 }
 
-/* PROGRESS CARD */
 
 .order-status-progress-card {
   background: white;
@@ -1992,7 +1951,6 @@
   font-size: 12px;
 }
 
-/* TIMELINE */
 
 .order-status-timeline {
   display: flex;
@@ -2067,7 +2025,6 @@
   font-weight: 700;
 }
 
-/* ORDER INFORMATION */
 
 .order-status-information {
   background: white;
@@ -2111,7 +2068,6 @@
   font-weight: 800;
 }
 
-/* MOBILE */
 
 @media (max-width: 600px) {
   .order-status-page {
@@ -2955,7 +2911,6 @@
   align-items: start;
 }
 
-/* ФОТО */
 
 .product-main-image {
   width: 100%;
@@ -2994,7 +2949,6 @@
   object-fit: cover;
 }
 
-/* ИНФОРМАЦИЯ */
 
 .product-information {
   background: white;
@@ -3058,7 +3012,6 @@
   color: #888;
 }
 
-/* ЦВЕТ */
 
 .product-colors {
   display: flex;
@@ -3085,7 +3038,6 @@
   color: #111;
 }
 
-/* РАЗМЕР */
 
 .product-sizes {
   display: flex;
@@ -3109,7 +3061,6 @@
   border-color: #111;
 }
 
-/* КОЛИЧЕСТВО */
 
 .product-quantity {
   display: flex;
@@ -3139,7 +3090,6 @@
   font-weight: 700;
 }
 
-/* БАЛАНС */
 
 .product-balance {
   display: flex;
@@ -3171,7 +3121,6 @@
   font-size: 23px;
 }
 
-/* ИТОГО */
 
 .product-total {
   display: flex;
@@ -3221,7 +3170,6 @@
   color: #111;
 }
 
-/* МОДАЛЬНОЕ ОКНО */
 
 .product-modal-overlay {
   position: fixed;
@@ -3346,7 +3294,6 @@
   color: white;
 }
 
-/* АДАПТАЦИЯ */
 
 @media (max-width: 800px) {
   .product-layout {
@@ -3480,7 +3427,6 @@
   font-family: Arial, sans-serif;
 }
 
-/* Боковая панель */
 
 .admin-sidebar {
   width: 245px;
@@ -3595,7 +3541,6 @@
   background: #fff1f1;
 }
 
-/* Основная часть */
 
 .admin-main {
   flex: 1;
@@ -3657,7 +3602,6 @@
   margin: auto;
 }
 
-/* Приветствие */
 
 .admin-welcome {
   min-height: 145px;
@@ -3688,7 +3632,6 @@
   margin-right: 15px;
 }
 
-/* Статистика */
 
 .admin-stats {
   display: grid;
@@ -3750,7 +3693,6 @@
   font-weight: 700;
 }
 
-/* Заголовки разделов */
 
 .admin-section {
   background: white;
@@ -3804,7 +3746,6 @@
   white-space: nowrap;
 }
 
-/* Таблицы */
 
 .admin-table-wrapper {
   width: 100%;
@@ -3910,7 +3851,6 @@
   gap: 7px;
 }
 
-/* Заявки */
 
 .admin-request-list {
   display: flex;
@@ -3979,7 +3919,6 @@
   font-size: 13px;
 }
 
-/* Модальное окно */
 
 .admin-modal-overlay {
   position: fixed;
@@ -4079,7 +4018,6 @@
   flex: 1;
 }
 
-/* Магазины */
 
 .admin-stores-grid {
   display: grid;
@@ -4131,7 +4069,6 @@
   margin-right: 5px;
 }
 
-/* Адаптация */
 
 @media (max-width: 1100px) {
   .admin-stats {
@@ -4351,7 +4288,6 @@
   color: #222;
 }
 
-/* Боковая панель */
 
 .admin-sidebar {
   width: 230px;
@@ -4388,7 +4324,6 @@
   font-size: 16px;
 }
 
-/* Меню */
 
 .admin-menu {
   display: flex;
@@ -4428,7 +4363,6 @@
   color: white;
 }
 
-/* Выход */
 
 .admin-sidebar-bottom {
   margin-top: auto;
@@ -4440,14 +4374,12 @@
   color: #dc4444;
 }
 
-/* Основная часть */
 
 .admin-main {
   flex: 1;
   min-width: 0;
 }
 
-/* Верхняя шапка */
 
 .admin-header {
   height: 80px;
@@ -4483,13 +4415,11 @@
   justify-content: center;
 }
 
-/* Контент страниц */
 
 .admin-content {
   padding: 30px;
 }
 
-/* Адаптация для телефона */
 
 @media (max-width: 700px) {
   .admin-page {
@@ -4591,7 +4521,6 @@
 .seller-bottom-link.active {
   color: #171717;
 }
-/* SELLER PROFILE */
 
 .seller-profile-page {
   min-height: 100vh;
@@ -4807,7 +4736,6 @@
     padding: 15px;
   }
 }
-/* ADD NEW PRODUCT */
 
 .seller-add-product-page {
   min-height: 100vh;
@@ -4903,7 +4831,6 @@
   margin: 0;
 }
 
-/* ФОТО */
 
 .seller-add-images {
   display: grid;
@@ -4975,7 +4902,6 @@
   line-height: 1.6;
 }
 
-/* РАЗМЕРЫ */
 
 .seller-add-options {
   display: flex;
@@ -5002,7 +4928,6 @@
   color: white;
 }
 
-/* ЦВЕТА */
 
 .seller-add-colors {
   display: grid;
@@ -5041,7 +4966,6 @@
   font-size: 11px;
 }
 
-/* ЦЕНА */
 
 .seller-add-price {
   display: flex;
@@ -5064,7 +4988,6 @@
   font-weight: 700;
 }
 
-/* СОХРАНЕНИЕ */
 
 .seller-add-submit {
   padding: 25px 27px;
@@ -5098,7 +5021,6 @@
   margin: 12px 0 0;
 }
 
-/* АДАПТАЦИЯ */
 
 @media (max-width: 700px) {
   .seller-add-product-container {
@@ -5143,7 +5065,6 @@
     max-width: none;
   }
 }
-/* НОВЫЕ ЗАКАЗЫ */
 
 .seller-orders-page {
   min-height: 100vh;
@@ -5311,7 +5232,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-/* ПОДРОБНОСТИ НОВОГО ЗАКАЗА */
 
 .seller-order-details-page {
   min-height: 100vh;
@@ -5560,7 +5480,6 @@
     gap: 17px;
   }
 }
-/* ПОДТВЕРЖДЁННЫЕ ЗАКАЗЫ */
 
 .seller-confirmed-page {
   min-height: 100vh;
@@ -5722,7 +5641,6 @@
     height: 85px;
   }
 }
-/* ПОДРОБНОСТИ ПОДТВЕРЖДЁННОГО ЗАКАЗА */
 
 .seller-confirmed-details-page {
   min-height: 100vh;
@@ -5973,7 +5891,6 @@
     gap: 17px;
   }
 }
-/* ЗАКАЗЫ С КУРЬЕРАМИ */
 
 .seller-courier-orders-page {
   min-height: 100vh;
@@ -6135,7 +6052,6 @@
     height: 85px;
   }
 }
-/* ПОДРОБНОСТИ ЗАКАЗА С КУРЬЕРОМ */
 
 .seller-courier-details-page {
   min-height: 100vh;
@@ -6395,7 +6311,6 @@
     gap: 17px;
   }
 }
-/* ЗАВЕРШЁННЫЕ ЗАКАЗЫ */
 
 .seller-completed-page {
   min-height: 100vh;
@@ -6557,7 +6472,6 @@
     height: 85px;
   }
 }
-/* SELLER CHECK PAGE */
 
 .seller-check-page {
   min-height: 100vh;
@@ -6566,7 +6480,6 @@
   font-family: Arial, sans-serif;
 }
 
-/* HEADER */
 
 .seller-check-header {
   width: 100%;
@@ -6607,7 +6520,6 @@
   color: #171717;
 }
 
-/* MAIN */
 
 .seller-check-main {
   width: 100%;
@@ -6616,7 +6528,6 @@
   padding: 55px 20px 35px;
 }
 
-/* TOP */
 
 .seller-check-top {
   text-align: center;
@@ -6656,14 +6567,12 @@
   line-height: 1.7;
 }
 
-/* CARD */
 
 .seller-check-card {
   background: #ffffff;
   border: 1px solid #dedede;
 }
 
-/* CARD HEADER */
 
 .seller-check-card-header {
   padding: 25px 30px;
@@ -6694,7 +6603,6 @@
   font-weight: 700;
 }
 
-/* INFORMATION */
 
 .seller-check-information {
   padding: 25px 30px;
@@ -6741,7 +6649,6 @@
   grid-column: 1 / -1;
 }
 
-/* STATUS */
 
 .seller-check-status {
   margin: 0 30px 25px;
@@ -6801,7 +6708,6 @@
   margin: 15px 0 0;
 }
 
-/* FOOTER */
 
 .seller-check-footer {
   padding: 18px 30px;
@@ -6824,7 +6730,6 @@
   margin: 0;
 }
 
-/* BOTTOM */
 
 .seller-check-bottom {
   display: flex;
@@ -6840,7 +6745,6 @@
   color: #555555;
 }
 
-/* TABLET */
 
 @media (max-width: 768px) {
   .seller-check-main {
@@ -6868,7 +6772,6 @@
   }
 }
 
-/* MOBILE */
 
 @media (max-width: 500px) {
   .seller-check-header {
@@ -6953,9 +6856,6 @@
     font-size: 9px;
   }
 }
-/* ================================
-   SELLER PRODUCTS
-================================ */
 
 .seller-page {
   min-height: 100vh;
@@ -6971,7 +6871,6 @@
   padding: 40px 45px 110px;
 }
 
-/* HEADER */
 
 .seller-header {
   display: flex;
@@ -7002,7 +6901,6 @@
   margin: 0;
 }
 
-/* ADD BUTTON */
 
 .seller-add-button {
   min-height: 46px;
@@ -7026,7 +6924,6 @@
   color: #fff;
 }
 
-/* STATISTICS */
 
 .seller-statistics {
   display: grid;
@@ -7070,7 +6967,6 @@
   font-weight: 800;
 }
 
-/* PRODUCTS HEADING */
 
 .seller-products-heading {
   display: flex;
@@ -7101,7 +6997,6 @@
   white-space: nowrap;
 }
 
-/* PRODUCTS GRID */
 
 .seller-products-grid {
   display: grid;
@@ -7121,7 +7016,6 @@
   border-color: #aaa;
 }
 
-/* PRODUCT IMAGE */
 
 .seller-product-image {
   width: 100%;
@@ -7162,7 +7056,6 @@
   font-size: 8px;
 }
 
-/* PRODUCT INFO */
 
 .seller-product-info {
   padding: 19px;
@@ -7199,7 +7092,6 @@
   font-weight: 800;
 }
 
-/* EDIT BUTTON */
 
 .seller-edit-button {
   min-height: 36px;
@@ -7223,7 +7115,6 @@
   color: #fff;
 }
 
-/* EMPTY */
 
 .seller-empty {
   padding: 65px 20px;
@@ -7254,7 +7145,6 @@
   margin: 0 auto;
 }
 
-/* MODAL */
 
 .seller-modal-overlay {
   position: fixed;
@@ -7360,7 +7250,6 @@
   background: #333;
 }
 
-/* TABLET */
 
 @media (max-width: 1000px) {
   .seller-main {
@@ -7376,7 +7265,6 @@
   }
 }
 
-/* MOBILE */
 
 @media (max-width: 600px) {
   .seller-main {
@@ -7475,7 +7363,6 @@
     height: 220px;
   }
 }
-/* НОВЫЕ ЗАКАЗЫ */
 
 .seller-orders-page {
   min-height: 100vh;
@@ -7524,7 +7411,6 @@
   font-weight: 700;
 }
 
-/* НАВИГАЦИЯ */
 
 .seller-orders-navigation {
   display: grid;
@@ -7573,7 +7459,6 @@
   color: #fff;
 }
 
-/* СПИСОК */
 
 .seller-orders-list {
   display: grid;
@@ -7679,7 +7564,6 @@
   color: #fff;
 }
 
-/* АДАПТАЦИЯ */
 
 @media (max-width: 1100px) {
   .seller-orders-main {
@@ -7883,7 +7767,6 @@
   background: #e53935;
   color: white;
 }
-/* Ожидание прихода курьера */
 
 .seller-confirmed-page {
   width: 100%;
@@ -7924,7 +7807,6 @@
   white-space: nowrap;
 }
 
-/* Список заказов */
 
 .seller-confirmed-list {
   display: grid;
@@ -7980,7 +7862,6 @@
   white-space: nowrap;
 }
 
-/* Товар */
 
 .seller-confirmed-product {
   display: flex;
@@ -8011,7 +7892,6 @@
   font-size: 13px;
 }
 
-/* Информация о покупателе */
 
 .seller-confirmed-info {
   display: flex;
@@ -8037,7 +7917,6 @@
   text-align: center;
 }
 
-/* Нижняя часть карточки */
 
 .seller-confirmed-card-bottom {
   display: flex;
@@ -8071,7 +7950,6 @@
   background: #3a424d;
 }
 
-/* Пустая страница и загрузка */
 
 .seller-confirmed-empty {
   display: flex;
@@ -8106,7 +7984,6 @@
   line-height: 1.6;
 }
 
-/* Планшет */
 
 @media (max-width: 1000px) {
   .seller-confirmed-page {
@@ -8118,7 +7995,6 @@
   }
 }
 
-/* Телефон */
 
 @media (max-width: 600px) {
   .seller-confirmed-page {

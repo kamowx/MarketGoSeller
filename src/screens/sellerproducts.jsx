@@ -90,7 +90,6 @@ function Sellerproducts() {
     }
   };
 
-  // Удаляем товар
   const deleteProduct = async (id) => {
     const confirmDelete = window.confirm(
       "Вы действительно хотите удалить этот товар?",

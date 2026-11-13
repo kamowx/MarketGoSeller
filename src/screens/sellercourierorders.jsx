@@ -46,7 +46,6 @@ function Sellercourierorders() {
       const sellerOrders = [];
 
       ordersResponse.data.forEach((order) => {
-        // Новая структура storeOrders
         if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
           const storeOrder = order.storeOrders.find(
             (item) => String(item.sellerId) === String(currentSeller.id),
@@ -65,7 +64,6 @@ function Sellercourierorders() {
           return;
         }
 
-        // Поддержка старых заказов
         const orderProductIds = Array.isArray(order.productId)
           ? order.productId.map(String)
           : [String(order.productId)];

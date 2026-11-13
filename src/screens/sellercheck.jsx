@@ -12,7 +12,6 @@ function Sellercheck() {
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Получаем данные пользователя и магазина
   useEffect(() => {
     const getData = async () => {
       const uid = localStorage.getItem("uid");
@@ -23,7 +22,6 @@ function Sellercheck() {
       }
 
       try {
-        // Получаем пользователя по UID
         const userResponse = await axios.get(USER_URL);
 
         const currentUser = userResponse.data.find((item) => item.uid === uid);
@@ -34,7 +32,6 @@ function Sellercheck() {
           return;
         }
 
-        // Проверяем статус продавца
         if (currentUser.status === "Новый") {
           navigate("/sellerinfo", { replace: true });
           return;
@@ -56,7 +53,6 @@ function Sellercheck() {
 
         setUser(currentUser);
 
-        // Получаем магазин по ID пользователя
         const businessResponse = await axios.get(BUSINESS_URL);
 
         const currentBusiness = businessResponse.data.find(
@@ -75,7 +71,6 @@ function Sellercheck() {
     getData();
   }, [navigate]);
 
-  // Выход из аккаунта
   const logout = () => {
     localStorage.removeItem("uid");
     navigate("/signin");

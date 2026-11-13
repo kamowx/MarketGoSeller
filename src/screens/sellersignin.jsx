@@ -31,7 +31,6 @@ function Sellerignin() {
     return response.data;
   };
 
-  //  статус
   const checkStatus = (user) => {
     if (user.status === "Новый") {
       navigate("/sellerinfo");
@@ -44,13 +43,11 @@ function Sellerignin() {
     }
   };
 
-  // Вход через Google
   const loginWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const googleUser = result.user;
 
-      // Проверяем, есть ли пользователь в MockAPI
       let existingUser = await getUserByUid(googleUser.uid);
 
       if (!existingUser) {
@@ -113,7 +110,6 @@ function Sellerignin() {
 
   return (
     <div className="admin-signup-page">
-      {/* 1 часть */}
       <div className="admin-signup-left">
         <div className="admin-signup-logo">
           MarketGo<span>.</span>
@@ -138,7 +134,6 @@ function Sellerignin() {
         <div className="admin-signup-left-bottom">MarketGo — ВАШ МАГАЗИН</div>
       </div>
 
-      {/* 2 часть */}
       <div className="admin-signup-right">
         <div className="admin-signup-form-container">
           <p className="admin-signup-form-small">ДОБРО ПОЖАЛОВАТЬ</p>

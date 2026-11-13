@@ -76,7 +76,6 @@ function Sellercourierdetails() {
           };
         });
       } else {
-        // Поддержка старого формата заказа
         const sellerProducts = allProducts.filter(
           (item) => String(item.userId) === String(currentSeller.id),
         );

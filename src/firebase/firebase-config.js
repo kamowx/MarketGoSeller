@@ -1,13 +1,7 @@
-// Firebase core
 import { initializeApp } from "firebase/app";
-
-// Auth
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-
-// Analytics (опционально)
 import { getAnalytics } from "firebase/analytics";
 
-// Конфигурация Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAeFpfkms2DInZRiirSb31htSv3UWu2Zw0",
   authDomain: "marketgo-b805e.firebaseapp.com",
@@ -18,12 +12,9 @@ const firebaseConfig = {
   measurementId: "G-JEM3SNT444",
 };
 
-// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 
-// Инициализация сервисов
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Analytics (можно удалить, если не нужен)
 export const analytics = getAnalytics(app);

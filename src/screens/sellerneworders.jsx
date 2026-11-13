@@ -22,7 +22,6 @@ function Sellerneworders() {
         return;
       }
 
-      // Получаем продавца
       const usersResponse = await axios.get(USERS_URL);
 
       const currentUser = usersResponse.data.find(
@@ -34,29 +33,24 @@ function Sellerneworders() {
         return;
       }
 
-      // Получаем товары продавца
       const productsResponse = await axios.get(PRODUCTS_URL);
 
       const sellerProducts = productsResponse.data.filter(
         (item) => String(item.userId) === String(currentUser.id),
       );
 
-      // Получаем заказы
       const ordersResponse = await axios.get(ORDERS_URL);
 
       const sellerOrders = [];
 
       ordersResponse.data.forEach((order) => {
-        // НОВАЯ СИСТЕМА: storeOrders
         if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
-          // Находим заказ именно этого продавца
           const myStoreOrder = order.storeOrders.find(
             (store) => String(store.sellerId) === String(currentUser.id),
           );
 
           if (!myStoreOrder) return;
 
-          // Проверяем статус именно магазина
           const storeStatus =
             myStoreOrder.orderstatus || order.orderstatus || "Ожидание";
 
@@ -77,10 +71,8 @@ function Sellerneworders() {
           sellerOrders.push({
             ...order,
 
-            // Товары только этого магазина
             products: myProducts,
 
-            // Данные конкретного магазина
             storeOrder: myStoreOrder,
             storeStatus,
 
@@ -92,7 +84,6 @@ function Sellerneworders() {
           return;
         }
 
-        // СТАРАЯ СИСТЕМА: поддержка старых заказов
         const orderProducts = Array.isArray(order.products)
           ? order.products
           : order.name
@@ -137,7 +128,6 @@ function Sellerneworders() {
         });
       });
 
-      // Сначала показываем последние заказы
       sellerOrders.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
       );
@@ -221,7 +211,6 @@ function Sellerneworders() {
                   <span className="seller-order-status">Новый</span>
                 </div>
 
-                {/* Товары этого магазина */}
                 {order.products.map((product, index) => (
                   <div
                     className="seller-order-product"

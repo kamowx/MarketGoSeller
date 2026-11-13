@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import SellerBottomnav from "../components/SellerBottomnav";
 
@@ -19,24 +19,22 @@ function Sellercompletedorders() {
 
   const getCompletedOrders = async () => {
     try {
-      let uid = localStorage.getItem("uid");
+      let uid = String(localStorage.getItem("uid") || "").replaceAll('"', "");
 
       if (!uid) {
         navigate("/");
         return;
       }
 
-      try {
-        uid = JSON.parse(uid);
-      } catch (error) {}
-
       const usersResponse = await axios.get(USERS_URL);
 
       const currentSeller = usersResponse.data.find(
-        (item) => String(item.uid) === String(uid),
+        (item) =>
+          String(item.uid).replaceAll('"', "") === uid &&
+          item.role === "seller",
       );
 
-      if (!currentSeller || currentSeller.role !== "seller") {
+      if (!currentSeller) {
         navigate("/");
         return;
       }
@@ -52,16 +50,70 @@ function Sellercompletedorders() {
 
       const productIds = sellerProducts.map((item) => String(item.id));
 
-      const completedOrders = ordersResponse.data
-        .filter(
-          (item) =>
-            productIds.includes(String(item.productId)) &&
-            (item.orderstatus === "Получено" ||
-              item.orderstatus === "Завершён"),
-        )
-        .sort(
-          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+      const completedOrders = [];
+
+      ordersResponse.data.forEach((order) => {
+        if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
+          const myStore = order.storeOrders.find(
+            (store) =>
+              String(store.sellerId) === String(currentSeller.id) &&
+              store.orderstatus === "Получено",
+          );
+
+          if (myStore) {
+            completedOrders.push({
+              ...order,
+              sellerStore: myStore,
+              sellerProducts: Array.isArray(myStore.products)
+                ? myStore.products
+                : [],
+              sellerTotalPrice: Number(myStore.totalPrice || 0),
+              sellerWeight: Number(myStore.allweight || 0),
+            });
+          }
+
+          return;
+        }
+
+        const orderProductIds = Array.isArray(order.productId)
+          ? order.productId.map(String)
+          : [String(order.productId)];
+
+        const myProducts = sellerProducts.filter((product) =>
+          orderProductIds.includes(String(product.id)),
         );
+
+        if (
+          myProducts.length > 0 &&
+          (order.orderstatus === "Получено" ||
+            order.orderstatus === "Завершен" ||
+            order.orderstatus === "Завершён")
+        ) {
+          const oldProducts = Array.isArray(order.products)
+            ? order.products.filter((item) =>
+                myProducts.some(
+                  (product) => String(product.id) === String(item.id),
+                ),
+              )
+            : myProducts.map((product) => ({
+                ...product,
+                quantity: order.quantity || 1,
+              }));
+
+          completedOrders.push({
+            ...order,
+            sellerProducts: oldProducts,
+            sellerTotalPrice: Number(order.totalPrice ?? order.price ?? 0),
+            sellerWeight: Number(order.allweight || 0),
+          });
+        }
+      });
+
+      completedOrders.sort(
+        (a, b) =>
+          new Date(b.completedAt || b.deliveredAt || b.createdAt || 0) -
+          new Date(a.completedAt || a.deliveredAt || a.createdAt || 0),
+      );
 
       setOrders(completedOrders);
     } catch (error) {
@@ -100,33 +152,55 @@ function Sellercompletedorders() {
           <p>Завершённых заказов пока нет</p>
         ) : (
           orders.map((order) => (
-            <div className="seller-completed-card" key={order.id}>
+            <div
+              className="seller-completed-card"
+              key={`${order.id}-${order.sellerStore?.businessId || "old"}`}
+            >
               <div className="seller-completed-top">
                 <strong>Заказ № MG-{order.id}</strong>
-                <span>Завершён</span>
+                <span>Получено</span>
               </div>
 
-              <div className="seller-completed-product">
-                <img
-                  src={
-                    order.avatar || "https://placehold.co/300x300?text=Product"
-                  }
-                  alt={order.name || "Товар"}
-                />
+              {order.sellerProducts.map((product, index) => (
+                <div
+                  className="seller-completed-product"
+                  key={product.id || index}
+                >
+                  <img
+                    src={
+                      product.avatar ||
+                      "https://placehold.co/300x300?text=Product"
+                    }
+                    alt={product.name || "Товар"}
+                  />
 
-                <div>
-                  <h4>{order.name || "Без названия"}</h4>
+                  <div>
+                    <h4>{product.name || "Без названия"}</h4>
 
-                  <p>
-                    Размер: {order.size || "Не указан"} · Цвет:{" "}
-                    {order.color || "Не указан"}
-                  </p>
+                    <p>
+                      Размер: {product.size || "Не указан"} · Цвет:{" "}
+                      {product.color || "Не указан"}
+                    </p>
 
-                  <strong>
-                    {Number(order.price || 0).toLocaleString("ru-RU")} сом
-                  </strong>
+                    <p>Количество: {product.quantity || 1} шт.</p>
+
+                    <p>
+                      Вес:{" "}
+                      {Number(product.weight || 0) *
+                        Number(product.quantity || 1)}{" "}
+                      кг
+                    </p>
+
+                    <strong>
+                      {(
+                        Number(product.price || 0) *
+                        Number(product.quantity || 1)
+                      ).toLocaleString("ru-RU")}{" "}
+                      сом
+                    </strong>
+                  </div>
                 </div>
-              </div>
+              ))}
 
               <div className="seller-completed-info">
                 <p>
@@ -151,6 +225,19 @@ function Sellercompletedorders() {
                       order.updatedAt ||
                       order.createdAt,
                   )}
+                </p>
+
+                <p>
+                  <span>Общий вес</span> {order.sellerWeight} кг
+                </p>
+
+                <p>
+                  <span>Сумма товаров</span>{" "}
+                  {order.sellerTotalPrice.toLocaleString("ru-RU")} сом
+                </p>
+
+                <p>
+                  <span>Статус</span> Получено
                 </p>
               </div>
             </div>

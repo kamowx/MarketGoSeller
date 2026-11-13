@@ -21,7 +21,6 @@ function Sellerprofile() {
 
   const [saving, setSaving] = useState(false);
 
-  // Получ данные продавца и магазина
   const getSellerData = async () => {
     const uid = localStorage.getItem("uid");
 
@@ -80,7 +79,6 @@ function Sellerprofile() {
     getSellerData();
   }, []);
 
-  // Отк редактирование
   const openBusiness = () => {
     if (!business) {
       alert("Информация о магазине не найдена");
@@ -96,7 +94,6 @@ function Sellerprofile() {
     setShowBusiness(true);
   };
 
-  // Редакт
   const updateBusiness = async (e) => {
     e.preventDefault();
 
@@ -238,7 +235,6 @@ function Sellerprofile() {
         </div>
       </div>
 
-      {/* Модальное ок */}
       {showBusiness && (
         <div
           className="seller-business-modal-overlay"

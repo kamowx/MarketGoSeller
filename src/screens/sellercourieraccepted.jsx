@@ -46,7 +46,6 @@ function Sellercourieraccepted() {
       const sellerOrders = [];
 
       ordersResponse.data.forEach((order) => {
-        // Новая структура storeOrders
         if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
           const storeOrder = order.storeOrders.find(
             (item) => String(item.sellerId) === String(currentSeller.id),
@@ -65,7 +64,6 @@ function Sellercourieraccepted() {
           return;
         }
 
-        // Поддержка старых заказов
         const orderProductIds = Array.isArray(order.productId)
           ? order.productId.map(String)
           : [String(order.productId)];
@@ -116,7 +114,6 @@ function Sellercourieraccepted() {
     getOrders();
   }, []);
 
-  // Передать заказ курьеру
   const giveOrderToCourier = async (order) => {
     try {
       if (order.storeOrder) {
@@ -132,7 +129,6 @@ function Sellercourieraccepted() {
           orderstatus: "Передано",
         });
       } else {
-        // Старый формат заказа
         await axios.put(`${ORDERS_URL}/${order.id}`, {
           ...order,
           orderstatus: "Передано",

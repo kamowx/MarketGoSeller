@@ -56,7 +56,6 @@ function Sellerneworderdetails() {
       let myStoreOrder = null;
       let currentStatus = "";
 
-      // Новая структура заказа
       if (
         Array.isArray(currentOrder.storeOrders) &&
         currentOrder.storeOrders.length > 0
@@ -87,7 +86,6 @@ function Sellerneworderdetails() {
         currentStatus =
           myStoreOrder.orderstatus || currentOrder.orderstatus || "Ожидание";
       } else {
-        // Поддержка старой структуры заказа
         const orderProductIds = Array.isArray(currentOrder.productId)
           ? currentOrder.productId
           : [currentOrder.productId];
@@ -110,7 +108,6 @@ function Sellerneworderdetails() {
             };
           });
 
-        // Если в старом заказе нет массива products
         if (myProducts.length === 0) {
           const oldProduct = sellerProducts.find(
             (item) => String(item.id) === String(currentOrder.productId),
@@ -170,13 +167,11 @@ function Sellerneworderdetails() {
     return new Date(date).toLocaleDateString("ru-RU");
   };
 
-  // Количество всех товаров
   const totalQuantity = products.reduce(
     (sum, item) => sum + Number(item.quantity || 1),
     0,
   );
 
-  // Общая стоимость товаров
   const total = storeOrder
     ? Number(
         storeOrder.totalPrice ??
@@ -195,7 +190,6 @@ function Sellerneworderdetails() {
           ),
       );
 
-  // Общий вес заказа
   const totalWeight = storeOrder
     ? Number(storeOrder.allweight || 0)
     : products.reduce(
@@ -215,13 +209,11 @@ function Sellerneworderdetails() {
     try {
       setConfirming(true);
 
-      // Получаем актуальный заказ перед обновлением
       const latestResponse = await axios.get(`${ORDERS_URL}/${id}`);
       const latestOrder = latestResponse.data;
 
       let updatedOrder;
 
-      // Новая структура storeOrders
       if (
         Array.isArray(latestOrder.storeOrders) &&
         latestOrder.storeOrders.length > 0
@@ -251,11 +243,9 @@ function Sellerneworderdetails() {
         updatedOrder = {
           ...latestOrder,
           storeOrders: updatedStoreOrders,
-          // Поддерживаем старое поле для совместимости
           orderstatus: "Подтверждено",
         };
       } else {
-        // Старая структура заказа
         if (latestOrder.orderstatus !== "Ожидание") {
           alert("Этот заказ уже обработан");
           return;

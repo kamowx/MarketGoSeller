@@ -20,7 +20,6 @@ function AddNewProducts() {
   const [colors, setColors] = useState([]);
   const [saving, setSaving] = useState(false);
 
-  // Выбрать размер
   const toggleSize = (size) => {
     if (sizes.includes(size)) {
       setSizes(sizes.filter((item) => item !== size));
@@ -29,7 +28,6 @@ function AddNewProducts() {
     }
   };
 
-  // Выбрать цвет
   const toggleColor = (color) => {
     if (colors.includes(color.name)) {
       setColors(colors.filter((item) => item !== color.name));
@@ -38,7 +36,6 @@ function AddNewProducts() {
     }
   };
 
-  // Сохранить товар
   const saveProduct = async () => {
     const uid = localStorage.getItem("uid");
 
@@ -82,7 +79,6 @@ function AddNewProducts() {
     try {
       setSaving(true);
 
-      // Получаем пользователей
       const usersResponse = await axios.get(USERS_URL);
 
       const currentUser = usersResponse.data.find(
@@ -95,10 +91,8 @@ function AddNewProducts() {
         return;
       }
 
-      // Получаем магазины
       const businessResponse = await axios.get(BUSINESS_URL);
 
-      // Находим магазин продавца
       const currentBusiness = businessResponse.data.find(
         (item) => String(item.userId) === String(currentUser.id),
       );
@@ -108,7 +102,6 @@ function AddNewProducts() {
         return;
       }
 
-      // Новый товар
       const newProduct = {
         userId: currentUser.id,
         createdAt: new Date().toISOString(),
@@ -163,7 +156,6 @@ function AddNewProducts() {
         </div>
 
         <div className="seller-add-product-form">
-          {/* Фотография товара */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>01</span>
@@ -195,7 +187,6 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Основная информация */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>02</span>
@@ -242,7 +233,6 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Размеры */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>03</span>
@@ -289,7 +279,6 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Цвета */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>04</span>
@@ -341,7 +330,6 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Цена и вес */}
           <div className="seller-add-section">
             <div className="seller-add-section-title">
               <span>05</span>
@@ -381,7 +369,6 @@ function AddNewProducts() {
             </div>
           </div>
 
-          {/* Сохранение */}
           <div className="seller-add-submit">
             <button type="button" onClick={saveProduct} disabled={saving}>
               <i className="fa-solid fa-check"></i>
