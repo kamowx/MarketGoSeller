@@ -14,6 +14,7 @@ function Sellerneworderdetails() {
   const [order, setOrder] = useState(null);
   const [products, setProducts] = useState([]);
   const [buyer, setBuyer] = useState(null);
+  const [pickupPoint, setPickupPoint] = useState(null);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
@@ -84,7 +85,7 @@ function Sellerneworderdetails() {
         });
 
         currentStatus =
-          myStoreOrder.orderstatus || currentOrder.orderstatus || "Ожидание";
+          currentOrder.orderstatus || myStoreOrder.orderstatus || "Ожидание";
       } else {
         const orderProductIds = Array.isArray(currentOrder.productId)
           ? currentOrder.productId
@@ -141,10 +142,21 @@ function Sellerneworderdetails() {
         (item) => String(item.id) === String(currentOrder.buyerId),
       );
 
+      let currentPickupPoint = null;
+
+      if (currentOrder.pickupId && String(currentOrder.pickupId) !== "Нет") {
+        currentPickupPoint = usersResponse.data.find(
+          (item) =>
+            String(item.id) === String(currentOrder.pickupId) &&
+            item.role === "pickuppoint",
+        );
+      }
+
       setOrder(currentOrder);
       setStoreOrder(myStoreOrder);
       setProducts(myProducts);
       setBuyer(currentBuyer || null);
+      setPickupPoint(currentPickupPoint || null);
       setStatus(currentStatus);
     } catch (error) {
       console.log("Ошибка получения заказа:", error);
@@ -163,7 +175,6 @@ function Sellerneworderdetails() {
 
   const formatDate = (date) => {
     if (!date) return "—";
-
     return new Date(date).toLocaleDateString("ru-RU");
   };
 
@@ -198,6 +209,7 @@ function Sellerneworderdetails() {
         0,
       );
 
+  // Обычное подтверждение заказа
   const confirmOrder = async () => {
     if (confirming || !order || !currentSeller) return;
 
@@ -270,17 +282,110 @@ function Sellerneworderdetails() {
         );
 
         setStoreOrder(updatedMyStore || null);
-        setStatus(updatedMyStore?.orderstatus || "Подтверждено");
+        setStatus(response.data.orderstatus || "Подтверждено");
       } else {
         setStatus(response.data.orderstatus);
       }
 
       alert("Заказ подтверждён!");
-
       navigate("/sellerconfirmedorders");
     } catch (error) {
       console.log("Ошибка подтверждения заказа:", error);
       alert("Не удалось подтвердить заказ");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  // Принять или отклонить возврат
+  const handleReturnDecision = async (decision) => {
+    if (confirming || !order || !currentSeller) return;
+
+    const pendingStatus = "Ожидание возврата подтверждения продавец";
+
+    const newStatus = decision === "accept" ? "Ожидание возврата" : "Отклонено";
+
+    try {
+      setConfirming(true);
+
+      const latestResponse = await axios.get(`${ORDERS_URL}/${id}`);
+      const latestOrder = latestResponse.data;
+
+      // Проверяем главный статус заказа
+      if (latestOrder.orderstatus !== pendingStatus) {
+        alert("Этот возврат уже обработан");
+        setOrder(latestOrder);
+        setStatus(latestOrder.orderstatus || "");
+        return;
+      }
+
+      let updatedOrder;
+
+      if (
+        Array.isArray(latestOrder.storeOrders) &&
+        latestOrder.storeOrders.length > 0
+      ) {
+        const myStoreIndex = latestOrder.storeOrders.findIndex(
+          (item) => String(item.sellerId) === String(currentSeller.id),
+        );
+
+        if (myStoreIndex === -1) {
+          alert("Этот заказ не принадлежит вашему магазину");
+          return;
+        }
+
+        const updatedStoreOrders = [...latestOrder.storeOrders];
+
+        updatedStoreOrders[myStoreIndex] = {
+          ...updatedStoreOrders[myStoreIndex],
+          orderstatus: newStatus,
+        };
+
+        updatedOrder = {
+          ...latestOrder,
+          orderstatus: newStatus,
+          storeOrders: updatedStoreOrders.map((item) => ({
+            ...item,
+            orderstatus: newStatus,
+          })),
+        };
+      } else {
+        updatedOrder = {
+          ...latestOrder,
+          orderstatus: newStatus,
+        };
+      }
+
+      const response = await axios.put(`${ORDERS_URL}/${id}`, updatedOrder);
+
+      setOrder(response.data);
+
+      if (
+        Array.isArray(response.data.storeOrders) &&
+        response.data.storeOrders.length > 0
+      ) {
+        const updatedMyStore = response.data.storeOrders.find(
+          (item) => String(item.sellerId) === String(currentSeller.id),
+        );
+
+        setStoreOrder(updatedMyStore || null);
+        setStatus(response.data.orderstatus || newStatus);
+      } else {
+        setStatus(response.data.orderstatus);
+      }
+
+      if (decision === "accept") {
+        alert(
+          "Вы приняли возврат! Ожидается передача товара в пункт передачи.",
+        );
+      } else {
+        alert("Вы отклонили возврат товара!");
+      }
+
+      navigate("/return");
+    } catch (error) {
+      console.log("Ошибка обработки возврата:", error);
+      alert("Не удалось обработать возврат");
     } finally {
       setConfirming(false);
     }
@@ -305,10 +410,16 @@ function Sellerneworderdetails() {
     );
   }
 
+  const isPickup = order.pickupId && String(order.pickupId) !== "Нет";
+
+  // Кнопки показываются по главному статусу заказа
+  const isReturnRequest =
+    order.orderstatus === "Ожидание возврата подтверждения продавец";
+
   return (
     <div className="seller-order-details-page">
       <div className="seller-order-details-header">
-        <Link to="/sellerneworders" className="seller-details-back">
+        <Link to="/return" className="seller-details-back">
           <i className="fa-solid fa-arrow-left"></i>
           Назад к заказам
         </Link>
@@ -367,20 +478,10 @@ function Sellerneworderdetails() {
               </div>
 
               <div>
-                <span>Номер телефона</span>
+                <span>Номер телефона покупателя</span>
                 <strong>
                   {buyer?.numberphone || order.numberphone || "—"}
                 </strong>
-              </div>
-
-              <div>
-                <span>Адрес доставки</span>
-                <strong>{buyer?.adres || order.adres || "—"}</strong>
-              </div>
-
-              <div>
-                <span>Место на карте</span>
-                <strong>{buyer?.adres || order.adres || "—"}</strong>
               </div>
 
               <div>
@@ -388,12 +489,74 @@ function Sellerneworderdetails() {
                 <strong>{formatDate(order.createdAt)}</strong>
               </div>
             </div>
+
+            <div className="seller-details-divider"></div>
+
+            <h3 className="seller-details-subtitle">
+              {isPickup ? "Информация о пункте передачи" : "Адрес доставки"}
+            </h3>
+
+            {isPickup ? (
+              pickupPoint ? (
+                <div className="seller-details-info">
+                  <div>
+                    <span>Способ получения</span>
+                    <strong>Пункт передачи</strong>
+                  </div>
+
+                  <div>
+                    <span>Номер пункта</span>
+                    <strong>№ {pickupPoint.id}</strong>
+                  </div>
+
+                  <div>
+                    <span>Название / имя пункта</span>
+                    <strong>
+                      {pickupPoint.firstname || ""} {pickupPoint.lastname || ""}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>Адрес пункта передачи</span>
+                    <strong>{pickupPoint.adres || "Адрес не указан"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Телефон пункта передачи</span>
+                    <strong>{pickupPoint.numberphone || "—"}</strong>
+                  </div>
+
+                  <div>
+                    <span>Получение заказа</span>
+                    <strong>{order.statusdostavka || "—"}</strong>
+                  </div>
+                </div>
+              ) : (
+                <p>Не удалось найти информацию о пункте передачи.</p>
+              )
+            ) : (
+              <div className="seller-details-info">
+                <div>
+                  <span>Способ получения</span>
+                  <strong>Доставка на дом</strong>
+                </div>
+
+                <div>
+                  <span>Адрес покупателя</span>
+                  <strong>
+                    {order.adres || buyer?.adres || "Адрес не указан"}
+                  </strong>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="seller-details-sidebar">
           <div className="seller-details-card">
-            <h3 className="seller-details-subtitle">Оплата заказа</h3>
+            <h3 className="seller-details-subtitle">
+              {isReturnRequest ? "Решение по возврату" : "Оплата заказа"}
+            </h3>
 
             <div className="seller-details-total">
               <span>Количество товаров</span>
@@ -412,16 +575,47 @@ function Sellerneworderdetails() {
               <strong>{formatPrice(total)} сом</strong>
             </div>
 
-            <button
-              className="seller-details-confirm"
-              onClick={confirmOrder}
-              disabled={status !== "Ожидание" || confirming}
-            >
-              <i className="fa-solid fa-check"></i>
-              {confirming ? "Подтверждение..." : "Подтвердить заказ"}
-            </button>
+            {isReturnRequest ? (
+              <>
+                <p>
+                  Покупатель хочет вернуть эти товары. Вы можете принять или
+                  отклонить возврат.
+                </p>
 
-            <Link to="/sellerneworders" className="seller-details-cancel">
+                <button
+                  className="seller-details-confirm"
+                  onClick={() => handleReturnDecision("accept")}
+                  disabled={confirming}
+                >
+                  <i className="fa-solid fa-check"></i>
+                  {confirming ? "Обработка..." : "Принять возврат"}
+                </button>
+
+                <br />
+
+                <button
+                  className="seller-details-cancel1"
+                  onClick={() => handleReturnDecision("reject")}
+                  disabled={confirming}
+                >
+                  <i className="fa-solid fa-xmark"></i>
+                  Отклонить возврат
+                </button>
+              </>
+            ) : (
+              status === "Ожидание" && (
+                <button
+                  className="seller-details-confirm"
+                  onClick={confirmOrder}
+                  disabled={confirming}
+                >
+                  <i className="fa-solid fa-check"></i>
+                  {confirming ? "Подтверждение..." : "Подтвердить заказ"}
+                </button>
+              )
+            )}
+
+            <Link to="/return" className="seller-details-cancel">
               Вернуться назад
             </Link>
           </div>

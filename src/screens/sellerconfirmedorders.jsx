@@ -13,6 +13,7 @@ function Sellerconfirmedorders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [callingId, setCallingId] = useState(null);
+  const [currentSeller, setCurrentSeller] = useState(null);
 
   const getOrders = async () => {
     try {
@@ -25,29 +26,63 @@ function Sellerconfirmedorders() {
 
       const usersResponse = await axios.get(USERS_URL);
 
-      const currentSeller = usersResponse.data.find(
+      const seller = usersResponse.data.find(
         (item) => String(item.uid).replaceAll('"', "") === String(uid),
       );
 
-      if (!currentSeller || currentSeller.role !== "seller") {
+      if (!seller || seller.role !== "seller") {
         navigate("/sellersignin");
         return;
       }
 
+      setCurrentSeller(seller);
+
       const productsResponse = await axios.get(PRODUCTS_URL);
 
       const sellerProducts = productsResponse.data.filter(
-        (item) => String(item.userId) === String(currentSeller.id),
+        (item) => String(item.userId) === String(seller.id),
       );
 
       const ordersResponse = await axios.get(ORDERS_URL);
 
-      const sellerOrders = ordersResponse.data.filter((order) => {
-        const sellerProduct = sellerProducts.find(
-          (product) => String(product.id) === String(order.productId),
-        );
+      const sellerOrders = [];
 
-        return sellerProduct && order.orderstatus === "Подтверждено";
+      ordersResponse.data.forEach((order) => {
+        // Новый формат: заказ содержит storeOrders
+        if (Array.isArray(order.storeOrders) && order.storeOrders.length > 0) {
+          const myStoreOrder = order.storeOrders.find(
+            (item) => String(item.sellerId) === String(seller.id),
+          );
+
+          if (myStoreOrder && myStoreOrder.orderstatus === "Подтверждено") {
+            sellerOrders.push({
+              ...order,
+              ...myStoreOrder,
+              mainOrderId: order.id,
+              id: order.id,
+              storeOrder: myStoreOrder,
+              orderstatus: myStoreOrder.orderstatus,
+              pickupId: order.pickupId,
+              statusdostavka: order.statusdostavka,
+            });
+          }
+        } else {
+          // Старый формат заказа
+          const orderProductIds = Array.isArray(order.productId)
+            ? order.productId
+            : [order.productId];
+
+          const hasMyProduct = sellerProducts.some((product) =>
+            orderProductIds.some(
+              (productId) =>
+                String(productId) === String(orderProductId(productId)),
+            ),
+          );
+
+          if (hasMyProduct && order.orderstatus === "Подтверждено") {
+            sellerOrders.push(order);
+          }
+        }
       });
 
       sellerOrders.sort(
@@ -63,6 +98,9 @@ function Sellerconfirmedorders() {
     }
   };
 
+  // Возвращает ID товара без изменения
+  const orderProductId = (productId) => productId;
+
   useEffect(() => {
     getOrders();
   }, []);
@@ -71,7 +109,6 @@ function Sellerconfirmedorders() {
 
   const formatDate = (date) => {
     if (!date) return "—";
-
     return new Date(date).toLocaleDateString("ru-RU");
   };
 
@@ -83,22 +120,82 @@ function Sellerconfirmedorders() {
       return;
     }
 
+    const isPickup = order.pickupId && String(order.pickupId) !== "Нет";
+
+    const newStatus = isPickup
+      ? "Ожидание пункта передачи"
+      : "Ожидание курьера";
+
     try {
       setCallingId(order.id);
 
-      await axios.put(`${ORDERS_URL}/${order.id}`, {
-        ...order,
-        orderstatus: "Ожидание курьера",
-      });
+      const latestResponse = await axios.get(
+        `${ORDERS_URL}/${order.mainOrderId || order.id}`,
+      );
+
+      const latestOrder = latestResponse.data;
+
+      let updatedOrder;
+
+      if (
+        Array.isArray(latestOrder.storeOrders) &&
+        latestOrder.storeOrders.length > 0
+      ) {
+        const updatedStoreOrders = [...latestOrder.storeOrders];
+
+        const myStoreIndex = updatedStoreOrders.findIndex(
+          (item) => String(item.sellerId) === String(currentSeller?.id),
+        );
+
+        if (myStoreIndex === -1) {
+          alert("Заказ не принадлежит вашему магазину");
+          return;
+        }
+
+        if (updatedStoreOrders[myStoreIndex].orderstatus !== "Подтверждено") {
+          alert("Этот заказ уже обработан");
+          return;
+        }
+
+        updatedStoreOrders[myStoreIndex] = {
+          ...updatedStoreOrders[myStoreIndex],
+          orderstatus: newStatus,
+        };
+
+        updatedOrder = {
+          ...latestOrder,
+          storeOrders: updatedStoreOrders,
+          orderstatus: newStatus,
+        };
+      } else {
+        if (latestOrder.orderstatus !== "Подтверждено") {
+          alert("Этот заказ уже обработан");
+          return;
+        }
+
+        updatedOrder = {
+          ...latestOrder,
+          orderstatus: newStatus,
+        };
+      }
+
+      await axios.put(
+        `${ORDERS_URL}/${order.mainOrderId || order.id}`,
+        updatedOrder,
+      );
 
       setOrders((prev) =>
         prev.filter((item) => String(item.id) !== String(order.id)),
       );
 
-      alert("Заказ отправлен на поиск курьера!");
+      if (isPickup) {
+        alert("Заказ ожидает передачи пункту передачи!");
+      } else {
+        alert("Заказ отправлен на поиск курьера!");
+      }
     } catch (error) {
-      console.log("Ошибка вызова курьера:", error);
-      alert("Не удалось вызвать курьера");
+      console.log("Ошибка изменения статуса заказа:", error);
+      alert("Не удалось изменить статус заказа");
     } finally {
       setCallingId(null);
     }
@@ -125,59 +222,95 @@ function Sellerconfirmedorders() {
             <p>Подтверждённые заказы появятся здесь.</p>
           </div>
         ) : (
-          orders.map((order) => (
-            <div className="seller-confirmed-card" key={order.id}>
-              <div className="seller-confirmed-top">
-                <strong>Заказ № MG-{order.id}</strong>
-                <span>Подтверждён</span>
-              </div>
+          orders.map((order) => {
+            const isPickup = order.pickupId && String(order.pickupId) !== "Нет";
 
-              <div className="seller-confirmed-product">
-                <img src={order.avatar} alt={order.name} />
+            return (
+              <div className="seller-confirmed-card" key={order.id}>
+                <div className="seller-confirmed-top">
+                  <strong>Заказ № MG-{order.id}</strong>
+                  <span>Подтверждён</span>
+                </div>
 
-                <div>
-                  <h4>{order.name}</h4>
+                <div className="seller-confirmed-product">
+                  <img
+                    src={order.avatar || order.products?.[0]?.avatar}
+                    alt={order.name || "Товар"}
+                  />
+
+                  <div>
+                    <h4>{order.name || order.products?.[0]?.name}</h4>
+                    <p>
+                      Размер: {order.size || "—"} · Цвет: {order.color || "—"}
+                    </p>
+                    <strong>
+                      {formatPrice(order.totalPrice ?? order.price)} сом
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="seller-confirmed-info">
                   <p>
-                    Размер: {order.size || "—"} · Цвет: {order.color || "—"}
+                    <span>Покупатель</span> {order.firstname} {order.lastname}
                   </p>
-                  <strong>{formatPrice(order.price)} сом</strong>
+
+                  <p>
+                    <span>Количество</span>{" "}
+                    {order.quantity ||
+                      order.products?.reduce(
+                        (sum, product) => sum + Number(product.quantity || 1),
+                        0,
+                      ) ||
+                      1}{" "}
+                    шт.
+                  </p>
+
+                  <p>
+                    <span>{isPickup ? "Адрес пункта передачи" : "Адрес"}</span>{" "}
+                    {order.adres || "—"}
+                  </p>
+
+                  {isPickup && (
+                    <>
+                      <p>
+                        <span>Номер пункта</span> № {order.pickupId}
+                      </p>
+
+                      <p>
+                        <span>Получение</span> {order.statusdostavka || "—"}
+                      </p>
+                    </>
+                  )}
+
+                  <p>
+                    <span>Номер телефона</span> {order.numberphone || "—"}
+                  </p>
+
+                  <p>
+                    <span>Дата заказа</span> {formatDate(order.createdAt)}
+                  </p>
+                </div>
+
+                <div className="seller-confirmed-actions">
+                  <button
+                    className="seller-confirmed-button"
+                    onClick={() => callCourier(order)}
+                    disabled={callingId === order.id}
+                  >
+                    <i
+                      className={`fa-solid ${isPickup ? "fa-box" : "fa-truck"}`}
+                    ></i>
+
+                    {callingId === order.id
+                      ? "Отправка..."
+                      : isPickup
+                        ? "Передать пункту передачи"
+                        : "Вызвать курьера"}
+                  </button>
                 </div>
               </div>
-
-              <div className="seller-confirmed-info">
-                <p>
-                  <span>Покупатель</span> {order.firstname} {order.lastname}
-                </p>
-
-                <p>
-                  <span>Количество</span> {order.quantity || 1} шт.
-                </p>
-
-                <p>
-                  <span>Адрес</span> {order.adres || "—"}
-                </p>
-
-                <p>
-                  <span>Номер телефона</span> {order.numberphone || "—"}
-                </p>
-
-                <p>
-                  <span>Дата заказа</span> {formatDate(order.createdAt)}
-                </p>
-              </div>
-
-              <div className="seller-confirmed-actions">
-                <button
-                  className="seller-confirmed-button"
-                  onClick={() => callCourier(order)}
-                  disabled={callingId === order.id}
-                >
-                  <i className="fa-solid fa-truck"></i>
-                  {callingId === order.id ? "Отправка..." : "Вызвать курьера"}
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

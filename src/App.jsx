@@ -17,6 +17,7 @@ import Sellercourierorders from "./screens/sellercourierorders";
 import Sellercourierdetails from "./screens/sellercourierdetails";
 import Sellercompletedorders from "./screens/sellercompletedorders";
 import Sellercourieraccepted from "./screens/sellercourieraccepted";
+import Return from "./screens/return";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route path="/addnewproducts" element={<AddNewProducts />} />
         <Route path="/sellerneworders" element={<Sellerneworders />} />
         <Route path="/sellercourierorders" element={<Sellercourierorders />} />
+        <Route path="/return" element={<Return />} />
         <Route
           path="/sellercourieraccepted"
           element={<Sellercourieraccepted />}

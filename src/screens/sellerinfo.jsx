@@ -14,6 +14,7 @@ function Sellerinfo() {
   const [lastname, setLastname] = useState("");
   const [numberphone, setNumberphone] = useState("");
   const [adres, setAdres] = useState("");
+  const [city, setCity] = useState("");
 
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
@@ -84,6 +85,7 @@ function Sellerinfo() {
       !firstname.trim() ||
       !lastname.trim() ||
       !numberphone.trim() ||
+      !city.trim() ||
       !adres.trim() ||
       !name.trim() ||
       !category ||
@@ -106,6 +108,7 @@ function Sellerinfo() {
         firstname,
         lastname,
         numberphone,
+        city,
         adres,
       });
 
@@ -135,6 +138,7 @@ function Sellerinfo() {
         firstname,
         lastname,
         numberphone,
+        city,
         adres,
         status: "Ожидание",
       });
@@ -229,6 +233,14 @@ function Sellerinfo() {
               />
             </div>
 
+            <div className="checkout-field">
+              <label>Город</label>
+              <select value={city} onChange={(e) => setCity(e.target.value)}>
+                <option value="">Выберите город</option>
+                <option value="Бишкек">Бишкек</option>
+                <option value="Ош">Ош</option>
+              </select>
+            </div>
             <br />
 
             <p className="checkout-form-description">

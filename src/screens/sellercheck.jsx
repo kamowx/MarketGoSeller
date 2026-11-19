@@ -171,6 +171,17 @@ function Sellercheck() {
                 <h3>{business?.adrescompany || "Не указано"}</h3>
               </div>
             </div>
+
+            <div className="seller-check-information-item seller-check-address">
+              <div className="seller-check-information-icon">
+                <i className="fa-solid fa-location-dot"></i>
+              </div>
+
+              <div>
+                <span>Город</span>
+                <h3>{user?.city || "Не указано"}</h3>
+              </div>
+            </div>
           </div>
 
           <div className="seller-check-status">

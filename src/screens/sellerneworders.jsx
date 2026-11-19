@@ -192,6 +192,11 @@ function Sellerneworders() {
             <i className="fa-solid fa-clock-rotate-left"></i>
             <span>История заказов</span>
           </Link>
+
+          <Link to="/return" className="seller-orders-nav ">
+            <i className="fa-solid fa-clock-rotate-left"></i>
+            <span>Возвраты</span>
+          </Link>
         </div>
 
         <div className="seller-orders-list">

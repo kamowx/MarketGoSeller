@@ -21,6 +21,16 @@ function Sellerprofile() {
 
   const [saving, setSaving] = useState(false);
 
+  // ДОБАВЛЕНО: состояние личных данных
+  const [showProfile, setShowProfile] = useState(false);
+
+  const [editingProfile, setEditingProfile] = useState({
+    firstname: "",
+    lastname: "",
+    numberphone: "",
+    city: "",
+  });
+
   const getSellerData = async () => {
     const uid = localStorage.getItem("uid");
 
@@ -129,6 +139,47 @@ function Sellerprofile() {
     }
   };
 
+  // ДОБАВЛЕНО: открытие редактирования личных данных
+  const openProfile = () => {
+    if (!user) return;
+
+    setEditingProfile({
+      firstname: user.firstname || "",
+      lastname: user.lastname || "",
+      numberphone: user.numberphone || "",
+      city: user.city || "",
+    });
+
+    setShowProfile(true);
+  };
+
+  // ДОБАВЛЕНО: сохранение личных данных
+  const updateProfile = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSaving(true);
+
+      const response = await axios.put(`${USERS_URL}/${user.id}`, {
+        ...user,
+        firstname: editingProfile.firstname,
+        lastname: editingProfile.lastname,
+        numberphone: editingProfile.numberphone,
+        city: editingProfile.city,
+      });
+
+      setUser(response.data);
+      setShowProfile(false);
+
+      alert("Личные данные обновлены!");
+    } catch (error) {
+      console.error("ОШИБКА ОБНОВЛЕНИЯ ПРОФИЛЯ:", error);
+      alert("Не удалось обновить данные");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="seller-profile-page">
       <SellerBottomnav />
@@ -177,9 +228,13 @@ function Sellerprofile() {
               <h3>{user?.numberphone || "Не указан"}</h3>
             </div>
 
-            <div className="seller-profile-info-item seller-profile-full">
+            <div className="seller-profile-info-item ">
               <span>Адрес магазина</span>
               <h3>{business?.adrescompany || "Не указан"}</h3>
+            </div>
+            <div className="seller-profile-info-item ">
+              <span>Город</span>
+              <h3>{user?.city || "Не указан"}</h3>
             </div>
             <div className="seller-profile-info-item seller-profile-full">
               <span>Баланс</span>
@@ -217,6 +272,26 @@ function Sellerprofile() {
             <div>
               <h3>Мои товары</h3>
               <p>Управление товарами магазина</p>
+            </div>
+
+            <i className="fa-solid fa-chevron-right"></i>
+          </Link>
+
+          <Link
+            to=""
+            className="seller-profile-action"
+            onClick={(e) => {
+              e.preventDefault();
+              openProfile();
+            }}
+          >
+            <div className="seller-profile-action-icon">
+              <i className="fa-solid fa-pen-to-square"></i>
+            </div>
+
+            <div>
+              <h3>Мои данные</h3>
+              <p>Изменение информации о пункте передачи</p>
             </div>
 
             <i className="fa-solid fa-chevron-right"></i>
@@ -308,6 +383,106 @@ function Sellerprofile() {
               }
               placeholder="Введите адрес магазина"
             />
+
+            <button
+              type="submit"
+              className="seller-business-modal-save"
+              disabled={saving}
+            >
+              <i className="fa-solid fa-check"></i>
+              {saving ? "Сохранение..." : "Сохранить изменения"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* ДОБАВЛЕНО: модальное окно личных данных */}
+      {showProfile && (
+        <div
+          className="seller-business-modal-overlay"
+          onClick={() => setShowProfile(false)}
+        >
+          <form
+            className="seller-business-modal"
+            onSubmit={updateProfile}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="seller-business-modal-close"
+              onClick={() => setShowProfile(false)}
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+
+            <div className="seller-business-modal-title">
+              <div className="seller-business-modal-icon">
+                <i className="fa-solid fa-user-pen"></i>
+              </div>
+
+              <h2>Мои данные</h2>
+              <p>Редактирование личной информации</p>
+            </div>
+
+            <label>Имя</label>
+            <input
+              type="text"
+              value={editingProfile.firstname}
+              onChange={(e) =>
+                setEditingProfile({
+                  ...editingProfile,
+                  firstname: e.target.value,
+                })
+              }
+              placeholder="Введите имя"
+            />
+
+            <label>Фамилия</label>
+            <input
+              type="text"
+              value={editingProfile.lastname}
+              onChange={(e) =>
+                setEditingProfile({
+                  ...editingProfile,
+                  lastname: e.target.value,
+                })
+              }
+              placeholder="Введите фамилию"
+            />
+
+            <label>Номер телефона</label>
+            <input
+              type="text"
+              value={editingProfile.numberphone}
+              onChange={(e) =>
+                setEditingProfile({
+                  ...editingProfile,
+                  numberphone: e.target.value,
+                })
+              }
+              placeholder="Введите номер телефона"
+            />
+
+            <label>Город</label>
+            <select
+              value={editingProfile.city}
+              onChange={(e) =>
+                setEditingProfile({
+                  ...editingProfile,
+                  city: e.target.value,
+                })
+              }
+            >
+              <option value="">Выберите город</option>
+              <option value="Бишкек">Бишкек</option>
+              <option value="Ош">Ош</option>
+              <option value="Джалал-Абад">Джалал-Абад</option>
+              <option value="Каракол">Каракол</option>
+              <option value="Токмок">Токмок</option>
+              <option value="Нарын">Нарын</option>
+              <option value="Талас">Талас</option>
+              <option value="Баткен">Баткен</option>
+            </select>
 
             <button
               type="submit"
